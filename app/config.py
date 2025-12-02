@@ -30,10 +30,15 @@ class Settings(BaseSettings):
     max_batch_size: int = 32
     max_sequence_length: int = 512
 
-    # Server settings
+    # REST API settings
     host: str = "0.0.0.0"
     port: int = 8000
     workers: int = 1
+
+    # gRPC settings (for Thunderbolt connections)
+    grpc_host: str = "0.0.0.0"
+    grpc_port: int = 50051
+    grpc_workers: int = 10
 
     # Logging
     log_level: str = "INFO"

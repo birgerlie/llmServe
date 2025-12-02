@@ -1,0 +1,162 @@
+// NB-BERT/NB-SBERT Embedding Service
+// Optimized for high-bandwidth connections (Thunderbolt, 10GbE)
+
+syntax = "proto3";
+
+package embedding;
+
+option python_generic_services = true;
+
+// Embedding generation mode
+enum Mode {
+  MODE_UNSPECIFIED = 0;
+  MODE_EMBEDDING = 1;   // NB-SBERT sentence embeddings
+  MODE_ENCODE = 2;      // NB-BERT encoder representations
+}
+
+// Output format
+enum OutputType {
+  OUTPUT_UNSPECIFIED = 0;
+  OUTPUT_VECTOR = 1;         // Single pooled vector
+  OUTPUT_TOKEN_VECTORS = 2;  // Per-token embeddings
+  OUTPUT_POOLED_VECTOR = 3;  // Pooled representation
+}
+
+// Single embedding request
+message EmbeddingRequest {
+  string text = 1;
+  Mode mode = 2;
+  OutputType output = 3;
+  bool normalize = 4;
+}
+
+// Batch embedding request
+message BatchEmbeddingRequest {
+  repeated string texts = 1;
+  Mode mode = 2;
+  OutputType output = 3;
+  bool normalize = 4;
+}
+
+// Streaming embedding request (for large documents)
+message StreamingEmbeddingRequest {
+  oneof request {
+    StreamConfig config = 1;
+    TextChunk chunk = 2;
+  }
+}
+
+message StreamConfig {
+  Mode mode = 1;
+  OutputType output = 2;
+  bool normalize = 3;
+  int32 chunk_size = 4;  // Optional: hint for chunking
+}
+
+message TextChunk {
+  string text = 1;
+  int32 chunk_index = 2;
+  bool is_last = 3;
+}
+
+// Embedding vector (efficient binary representation)
+message Vector {
+  repeated float values = 1 [packed = true];
+  int32 dimension = 2;
+}
+
+// Single embedding response
+message EmbeddingResponse {
+  Vector vector = 1;
+  string model = 2;
+  bool normalized = 3;
+}
+
+// Encoder response with optional token embeddings
+message EncoderResponse {
+  Vector pooled_embedding = 1;
+  repeated Vector token_embeddings = 2;
+  repeated string tokens = 3;
+  string model = 4;
+  bool normalized = 5;
+}
+
+// Batch embedding response
+message BatchEmbeddingResponse {
+  repeated Vector vectors = 1;
+  int32 count = 2;
+  string model = 3;
+  bool normalized = 4;
+}
+
+// Streaming response
+message StreamingEmbeddingResponse {
+  int32 chunk_index = 1;
+  Vector vector = 2;
+  bool is_last = 3;
+}
+
+// Similarity request
+message SimilarityRequest {
+  string text1 = 1;
+  string text2 = 2;
+}
+
+// Similarity response
+message SimilarityResponse {
+  float similarity = 1;
+  string model = 2;
+}
+
+// Bulk similarity request (compare one query against many documents)
+message BulkSimilarityRequest {
+  string query = 1;
+  repeated string documents = 2;
+  int32 top_k = 3;  // Return top K results (0 = all)
+}
+
+message SimilarityResult {
+  int32 index = 1;
+  float similarity = 2;
+  string document = 3;  // Optional: include document text
+}
+
+message BulkSimilarityResponse {
+  repeated SimilarityResult results = 1;
+  string model = 2;
+}
+
+// Health check
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  bool sbert_model_loaded = 2;
+  bool bert_model_loaded = 3;
+  string device = 4;
+  string version = 5;
+}
+
+// The embedding service
+service EmbeddingService {
+  // Single text embedding
+  rpc Embed(EmbeddingRequest) returns (EmbeddingResponse);
+
+  // Batch embedding (multiple texts)
+  rpc EmbedBatch(BatchEmbeddingRequest) returns (BatchEmbeddingResponse);
+
+  // Streaming embedding for large documents
+  rpc EmbedStream(stream StreamingEmbeddingRequest) returns (stream StreamingEmbeddingResponse);
+
+  // NB-BERT encoder
+  rpc Encode(EmbeddingRequest) returns (EncoderResponse);
+
+  // Calculate similarity between two texts
+  rpc Similarity(SimilarityRequest) returns (SimilarityResponse);
+
+  // Bulk similarity (query vs many documents)
+  rpc BulkSimilarity(BulkSimilarityRequest) returns (BulkSimilarityResponse);
+
+  // Health check
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
