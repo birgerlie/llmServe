@@ -44,7 +44,6 @@ GRPC_OPTIONS = [
 
     # Enable compression for smaller embeddings
     ("grpc.default_compression_algorithm", grpc.Compression.Gzip.value),
-    ("grpc.grpc.default_compression_level", grpc.Compression.High.value),
 ]
 
 

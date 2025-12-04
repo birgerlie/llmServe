@@ -5,8 +5,6 @@ syntax = "proto3";
 
 package embedding;
 
-option python_generic_services = true;
-
 // Embedding generation mode
 enum Mode {
   MODE_UNSPECIFIED = 0;
