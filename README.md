@@ -7,7 +7,7 @@ A high-performance embedding service for generating embeddings using **NB-BERT**
 - **gRPC** - High-performance binary protocol optimized for Thunderbolt 5
 
 Optimized for:
-- MacBook Air M1/M2 (CPU mode)
+- M series cpus
 - Thunderbolt 5 connections between machines (~80 Gbps)
 - RAG (Retrieval-Augmented Generation) pipelines
 - Norwegian text (bokmål, nynorsk, dialects, historical texts)
